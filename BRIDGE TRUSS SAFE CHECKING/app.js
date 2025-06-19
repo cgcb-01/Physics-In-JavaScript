@@ -5,6 +5,11 @@
 3. Screw option clicking give screw image.
 4. Fixing the screw on a bar shows length from surrounding bars automatically.
 5. Assistance bar on side to guide.
-6. 
+6. A ruler to measure the distance. 
+7. When we place a node/screw it measures the distance from its most nearest node anoter way to measure the distace by giving the name of two screw and then it with show the distance.
+
+8. After design confirmation. Force calculation.
+9. according to force on rods giving color: Red, Yellow,Green.
+10. Weighnt testing taking spagetti like substance for testing. We can also change materials strength.
 
 */
