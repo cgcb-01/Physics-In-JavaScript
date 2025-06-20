@@ -13,3 +13,29 @@
 10. Weighnt testing taking spagetti like substance for testing. We can also change materials strength.
 
 */
+const toolname=["RULER","FIXED JOINT","MOVING JOINT","BARS","SCREWS"];
+const toolimg=["","","","","",""];
+const tools=document.querySelector(".tools");
+for(let i=0;i<toolname.length;i++)
+{
+    const div=document.createElement("div");
+    div.className="element";
+
+    //Creating h1 tag for name.
+    const h1=document.createElement("h1");
+    h1.textContent=toolname[i];
+
+    //Creating img tag for image
+    const img=document.createElement("img");
+    img.src=toolimg[i];
+    img.className="toolimg";
+
+    //appending h1 and img to div
+    div.appendChild(h1);
+    div.appendChild(img);
+
+    //appending div to tools.
+    tools.appendChild(div)
+
+}
+
