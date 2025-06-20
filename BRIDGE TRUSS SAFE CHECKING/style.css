@@ -79,11 +79,14 @@ body .area .tools .element .toolimg {
 body .area .draw {
   width: 90%;
   height: 89vh;
-  margin-right: 10px;
+  margin-right: 15px;
 }
 body .area .draw canvas {
   border: 1px solid black;
   cursor: crosshair;
   height: 100%;
   width: 100%;
+  border-radius: 5px;
+  background-color: rgb(240, 237, 237);
+  display: block;
 }/*# sourceMappingURL=style.css.map */

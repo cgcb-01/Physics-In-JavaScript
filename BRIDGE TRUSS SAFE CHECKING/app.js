@@ -39,3 +39,81 @@ for(let i=0;i<toolname.length;i++)
 
 }
 
+const canvas = document.getElementById("bridgeCanvas");
+const ctx = canvas.getContext("2d");
+
+let jointX = 50;
+let jointY = 50;
+const triSize = 24;
+let isDragging = false;
+
+// Draw triangle centered at (x, y)
+function drawTriangle(x, y, size = triSize, color = "#000") {
+  const height = size * Math.sqrt(3) / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(x, y - height / 2);          // top
+  ctx.lineTo(x - size / 2, y + height / 2); // bottom left
+  ctx.lineTo(x + size / 2, y + height / 2); // bottom right
+  ctx.closePath();
+
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+// Clear and draw everything
+function draw() {
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  drawTriangle(jointX, jointY);
+}
+
+// Resize canvas based on device pixel ratio
+function resizeCanvasToDisplaySize() {
+  const dpr = window.devicePixelRatio || 1;
+
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+  ctx.scale(dpr, dpr); // scale all drawings
+
+  // Recalculate initial joint position at bottom-left
+  jointX = 5 + triSize / 2;
+  jointY = canvas.clientHeight - 5 - triSize / 2;
+
+  draw();
+}
+
+// Handle dragging
+canvas.addEventListener("mousedown", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (
+    x >= jointX - triSize / 2 && x <= jointX + triSize / 2 &&
+    y >= jointY - triSize / 2 && y <= jointY + triSize / 2
+  ) {
+    isDragging = true;
+  }
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    const rect = canvas.getBoundingClientRect();
+    jointX = e.clientX - rect.left;
+    jointY = e.clientY - rect.top;
+    draw();
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+
+window.addEventListener("resize", resizeCanvasToDisplaySize);
+resizeCanvasToDisplaySize();
