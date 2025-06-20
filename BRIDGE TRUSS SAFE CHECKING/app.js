@@ -13,8 +13,8 @@
 10. Weighnt testing taking spagetti like substance for testing. We can also change materials strength.
 
 */
-const toolname=["RULER","FIXED JOINT","MOVING JOINT","BARS","SCREWS"];
-const toolimg=["","","","","",""];
+const toolname=["RULER","FIXED JOINT","MOVING JOINT","SCREWS","BARS"];
+const toolimg=["./IMAGES/istockphoto-188151131-612x612.png","./IMAGES/Untitled21_20250620133135.png","./IMAGES/Untitled21_20250620133541.png","./IMAGES/pngtree-screw-cartoon-png-image_8955148.png","./IMAGES/Untitled21_20250620133135.png",];
 const tools=document.querySelector(".tools");
 for(let i=0;i<toolname.length;i++)
 {
