@@ -49,7 +49,7 @@ let isDragging = false;
 
 // Draw triangle centered at (x, y)
 function drawTriangle(x, y, size = triSize, color = "rgb(25, 170, 227)") {
-  const height = size * Math.sqrt(3) / 2;
+  const height = size * Math.sqrt(5)/2 ;
 
   ctx.beginPath();
   ctx.moveTo(x, y - height / 2);          // top
