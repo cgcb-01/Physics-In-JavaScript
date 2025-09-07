@@ -13,107 +13,224 @@
 10. Weighnt testing taking spagetti like substance for testing. We can also change materials strength.
 
 */
-const toolname=["RULER","FIXED JOINT","MOVING JOINT","SCREWS","BARS"];
-const toolimg=["./IMAGES/istockphoto-188151131-612x612.png","./IMAGES/Untitled21_20250620133135.png","./IMAGES/Untitled21_20250620133541.png","./IMAGES/pngtree-screw-cartoon-png-image_8955148.png","./IMAGES/Untitled21_20250620133135.png",];
-const tools=document.querySelector(".tools");
-for(let i=0;i<toolname.length;i++)
-{
-    const div=document.createElement("div");
-    div.className="element";
+let nodes = [];
+let bars = [];
+let forces = [];
+let nodeCounter = 1;
+let barCounter = 1;
+let stateStack = [];
 
-    //Creating h1 tag for name.
-    const h1=document.createElement("h1");
-    h1.textContent=toolname[i];
-
-    //Creating img tag for image
-    const img=document.createElement("img");
-    img.src=toolimg[i];
-    img.className="toolimg";
-
-    //appending h1 and img to div
-    div.appendChild(h1);
-    div.appendChild(img);
-
-    //appending div to tools.
-    tools.appendChild(div)
-
+function startBridge() {
+  addNode(150, 300, "pinned"); // default first node
 }
 
-const canvas = document.getElementById("bridgeCanvas");
-const ctx = canvas.getContext("2d");
-
-let jointX = 50;
-let jointY = 50;
-const triSize = 24;
-let isDragging = false;
-
-// Draw triangle centered at (x, y)
-function drawTriangle(x, y, size = triSize, color = "rgb(25, 170, 227)") {
-  const height = size * Math.sqrt(5)/2 ;
-
-  ctx.beginPath();
-  ctx.moveTo(x, y - height / 2);          // top
-  ctx.lineTo(x - size / 2, y + height / 2); // bottom left
-  ctx.lineTo(x + size / 2, y + height / 2); // bottom right
-  ctx.closePath();
-
-  ctx.fillStyle = color;
-  ctx.fill();
-  ctx.strokeStyle = "black";
-  ctx.lineWidth = 1;
-  ctx.stroke();
+// Clone current state
+function cloneState() {
+  return {
+    nodes: JSON.parse(JSON.stringify(nodes)),
+    bars: JSON.parse(JSON.stringify(bars)),
+    forces: JSON.parse(JSON.stringify(forces)),
+    nodeCounter,
+    barCounter,
+  };
 }
 
-// Clear and draw everything
-function draw() {
-  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-  drawTriangle(jointX, jointY);
+function saveState() {
+  stateStack.push(cloneState());
 }
 
-// Resize canvas based on device pixel ratio
-function resizeCanvasToDisplaySize() {
-  const dpr = window.devicePixelRatio || 1;
-
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
-  ctx.scale(dpr, dpr); // scale all drawings
-
-  // Recalculate initial joint position at bottom-left
-  jointX = 5 + triSize / 2;
-  jointY = canvas.clientHeight - 5 - triSize / 2;
-
-  draw();
-}
-
-// Handle dragging
-canvas.addEventListener("mousedown", (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  if (
-    x >= jointX - triSize / 2 && x <= jointX + triSize / 2 &&
-    y >= jointY - triSize / 2 && y <= jointY + triSize / 2
-  ) {
-    isDragging = true;
+function goBack() {
+  if (stateStack.length === 0) {
+    alert("No previous state!");
+    return;
   }
-});
+  const prevState = stateStack.pop();
+  nodes = prevState.nodes;
+  bars = prevState.bars;
+  forces = prevState.forces;
+  nodeCounter = prevState.nodeCounter;
+  barCounter = prevState.barCounter;
 
-canvas.addEventListener("mousemove", (e) => {
-  if (isDragging) {
-    const rect = canvas.getBoundingClientRect();
-    jointX = e.clientX - rect.left;
-    jointY = e.clientY - rect.top;
-    draw();
+  // Clear bridge
+  const bridge = document.getElementById("bridge");
+  bridge.innerHTML = "";
+
+  // Re-render nodes
+  nodes.forEach((n) => {
+    let nodeDiv = document.createElement("div");
+    nodeDiv.id = "node-" + n.id;
+    nodeDiv.className = "node";
+    nodeDiv.style.left = n.x - 7 + "px";
+    nodeDiv.style.top = n.y - 7 + "px";
+    nodeDiv.onclick = () => openNodeForm(n.id);
+    bridge.appendChild(nodeDiv);
+
+    let label = document.createElement("div");
+    label.innerText = "N" + n.id;
+    label.className = "label";
+    label.style.left = n.x + 12 + "px";
+    label.style.top = n.y - 8 + "px";
+    bridge.appendChild(label);
+  });
+
+  // Re-render bars
+  bars.forEach((b) => {
+    let startNode = nodes.find((n) => n.id === b.startNode);
+    let barDiv = document.createElement("div");
+    barDiv.id = "bar-" + b.id;
+    barDiv.className = "bar";
+    barDiv.style.left = startNode.x + "px";
+    barDiv.style.top = startNode.y + "px";
+    barDiv.style.width = b.length + "px";
+    barDiv.style.transform = "rotate(" + -b.angle + "deg)";
+    bridge.appendChild(barDiv);
+  });
+
+  updateDetails();
+}
+
+// Add node
+function addNode(x, y, jointType = "free") {
+  let nodeId = nodeCounter++;
+  nodes.push({
+    id: nodeId,
+    x,
+    y,
+    jointType,
+    force: { fx: 0, fy: 0 },
+  });
+
+  const bridge = document.getElementById("bridge");
+
+  let nodeDiv = document.createElement("div");
+  nodeDiv.id = "node-" + nodeId;
+  nodeDiv.className = "node";
+  nodeDiv.style.left = x - 7 + "px";
+  nodeDiv.style.top = y - 7 + "px";
+  nodeDiv.onclick = () => openNodeForm(nodeId);
+  bridge.appendChild(nodeDiv);
+
+  let label = document.createElement("div");
+  label.innerText = "N" + nodeId;
+  label.className = "label";
+  label.style.left = x + 12 + "px";
+  label.style.top = y - 8 + "px";
+  bridge.appendChild(label);
+
+  updateDetails();
+  return nodeId;
+}
+
+// Add bar
+function addBar(startNodeId, length, angleDeg) {
+  saveState();
+  let startNode = nodes.find((n) => n.id === startNodeId);
+  let angleRad = (angleDeg * Math.PI) / 180;
+
+  let endX = startNode.x + length * Math.cos(angleRad);
+  let endY = startNode.y - length * Math.sin(angleRad);
+
+  let endNodeId = addNode(endX, endY);
+
+  bars.push({
+    id: barCounter,
+    startNode: startNodeId,
+    endNode: endNodeId,
+    length,
+    angle: angleDeg,
+  });
+
+  const bridge = document.getElementById("bridge");
+  let barDiv = document.createElement("div");
+  barDiv.id = "bar-" + barCounter;
+  barDiv.className = "bar";
+  barDiv.style.left = startNode.x + "px";
+  barDiv.style.top = startNode.y + "px";
+  barDiv.style.width = length + "px";
+  barDiv.style.transform = "rotate(" + -angleDeg + "deg)";
+  bridge.appendChild(barDiv);
+
+  barCounter++;
+  updateDetails();
+  return endNodeId;
+}
+
+// Node form
+function openNodeForm(nodeId) {
+  let node = nodes.find((n) => n.id === nodeId);
+  const formContainer = document.getElementById("formContainer");
+  formContainer.innerHTML = `
+        <h3>Edit Node ${nodeId}</h3>
+        <label>Joint Type:
+          <select id="jointType">
+            <option ${node.jointType === "free" ? "selected" : ""}>free</option>
+            <option ${
+              node.jointType === "pinned" ? "selected" : ""
+            }>pinned</option>
+            <option ${
+              node.jointType === "roller" ? "selected" : ""
+            }>roller</option>
+            <option ${
+              node.jointType === "fixed" ? "selected" : ""
+            }>fixed</option>
+          </select>
+        </label>
+        <label>Force Fx: <input id="fx" type="number" value="${
+          node.force.fx
+        }"></label>
+        <label>Force Fy: <input id="fy" type="number" value="${
+          node.force.fy
+        }"></label>
+        <button onclick="saveNode(${nodeId})">Save</button>
+        <button onclick="addNewBar(${nodeId})">Add Bar</button>
+      `;
+}
+
+function saveNode(nodeId) {
+  saveState();
+  let node = nodes.find((n) => n.id === nodeId);
+  node.jointType = document.getElementById("jointType").value;
+  node.force.fx = parseFloat(document.getElementById("fx").value);
+  node.force.fy = parseFloat(document.getElementById("fy").value);
+
+  let existing = forces.find((f) => f.nodeId === nodeId);
+  if (existing) {
+    existing.fx = node.force.fx;
+    existing.fy = node.force.fy;
+  } else {
+    forces.push({
+      nodeId: nodeId,
+      fx: node.force.fx,
+      fy: node.force.fy,
+    });
   }
-});
 
-canvas.addEventListener("mouseup", () => {
-  isDragging = false;
-});
+  updateDetails();
+  alert("Node " + nodeId + " updated!");
+}
 
-window.addEventListener("resize", resizeCanvasToDisplaySize);
-resizeCanvasToDisplaySize();
+function addNewBar(startNodeId) {
+  let length = parseFloat(prompt("Enter bar length (px):"));
+  let angle = parseFloat(prompt("Enter bar angle (deg):"));
+  addBar(startNodeId, length, angle);
+}
+
+// Update sidebar details
+function updateDetails() {
+  let nodeDetails = document.getElementById("nodeDetails");
+  let barDetails = document.getElementById("barDetails");
+
+  nodeDetails.innerHTML = "<strong>Nodes:</strong>";
+  nodes.forEach((n) => {
+    nodeDetails.innerHTML += `
+          <div class="detail-item">N${n.id} (${n.jointType}) Fx=${n.force.fx}, Fy=${n.force.fy}</div>
+        `;
+  });
+
+  barDetails.innerHTML = "<strong>Bars:</strong>";
+  bars.forEach((b) => {
+    barDetails.innerHTML += `
+          <div class="detail-item">B${b.id}: N${b.startNode}→N${b.endNode}, L=${b.length}, θ=${b.angle}°</div>
+        `;
+  });
+}
