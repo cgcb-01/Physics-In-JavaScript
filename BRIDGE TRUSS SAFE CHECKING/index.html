@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bridge Strength</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="header">
-    <h1>Check The Strength of the bridge</h1>
-    </div>
-   <div class="area">
-    <div class="tools">
-        <h1>TOOLS</h1>
-        <!--The tools are added by JS-->
-    </div>
-    <div class="draw">
-        <canvas id="bridgeCanvas"></canvas>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bridge Builder</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body onload="startBridge()">
+    <div id="bridge"></div>
+
+    <div id="sidebar">
+      <div id="formContainer"><h3>Select a Node</h3></div>
+      <button onclick="goBack()">Back</button>
+      <div id="details">
+        <h4>Bridge Details</h4>
+        <div id="nodeDetails"></div>
+        <div id="barDetails"></div>
+      </div>
     </div>
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
